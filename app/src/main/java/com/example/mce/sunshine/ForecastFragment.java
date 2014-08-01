@@ -2,6 +2,7 @@ package com.example.mce.sunshine;
 
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -15,7 +16,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import org.json.JSONException;
 
@@ -71,9 +71,9 @@ import java.util.Arrays;
             forecastList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Context ctx  = getActivity().getApplicationContext();
-                    Toast toast = Toast.makeText(ctx, (String) parent.getItemAtPosition(position), Toast.LENGTH_SHORT);
-                    toast.show();
+                    Context ctx = getActivity().getApplicationContext();
+                    Intent detailIntent = new Intent(ctx, DetailActivity.class).putExtra(Intent.EXTRA_INTENT, (String) parent.getItemAtPosition(position));
+                    startActivity(detailIntent);
                 }
             });
             return rootView;
