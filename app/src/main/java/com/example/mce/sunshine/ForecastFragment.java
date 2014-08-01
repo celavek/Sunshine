@@ -1,6 +1,7 @@
 package com.example.mce.sunshine;
 
 import android.app.Fragment;
+import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -11,8 +12,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 
@@ -65,6 +68,14 @@ import java.util.Arrays;
             ListView forecastList = (ListView) rootView.findViewById(R.id.forecast_listview);
             forecastList.setAdapter(mForecastAdapter);
 
+            forecastList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Context ctx  = getActivity().getApplicationContext();
+                    Toast toast = Toast.makeText(ctx, (String) parent.getItemAtPosition(position), Toast.LENGTH_SHORT);
+                    toast.show();
+                }
+            });
             return rootView;
         }
 
