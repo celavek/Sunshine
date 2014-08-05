@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditTextPreference
+        android:key="pref_location_city"
+        android:title="@string/pref_location_city"
+        android:defaultValue="@string/pref_location_city_default" />
+    <ListPreference
+        android:key="pref_measure_unit"
+        android:title="@string/pref_measure_unit"
+        android:dialogTitle="@string/pref_measure_unit"
+        android:entries="@array/pref_measure_unit_entries"
+        android:entryValues="@array/pref_measure_unit_values"
+        android:defaultValue="@string/pref_measure_unit_default" />
+</PreferenceScreen>

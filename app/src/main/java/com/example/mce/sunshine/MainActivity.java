@@ -1,7 +1,9 @@
 package com.example.mce.sunshine;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -17,6 +19,8 @@ public class MainActivity extends Activity {
                     .add(R.id.container, new ForecastFragment())
                     .commit();
         }
+
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
     }
 
 
@@ -34,6 +38,7 @@ public class MainActivity extends Activity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_settings) {
+            startActivity(new Intent(this, SettingsActivity.class).putExtra(Intent.EXTRA_INTENT, MainActivity.class.getCanonicalName()));
             return true;
         }
         return super.onOptionsItemSelected(item);
