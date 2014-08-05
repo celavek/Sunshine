@@ -8,7 +8,9 @@
     <string name="title_activity_detail">DetailActivity</string>
     <string name="pref_location_city">City</string>
     <string name="pref_location_city_default">Brussels</string>
-    <string name="pref_measure_unit">Measure Unit</string>
-    <string name="pref_measure_unit_default">metric</string>
+    <string name="pref_measure_unit">Unit</string>
+    <string name="pref_measure_unit_default">Celsius</string>
     <string name="title_activity_settings">Preferences</string>
+    <string name="pref_city_key" translatable="false">sunshine_city</string>
+    <string name="pref_unit_key" translatable="false">sunshine_unit</string>
 </resources>
