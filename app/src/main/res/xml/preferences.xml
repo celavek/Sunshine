@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <EditTextPreference
-        android:key="@string/pref_city_key"
-        android:title="@string/pref_location_city"
-        android:defaultValue="@string/pref_location_city_default"
-        android:summary="@string/pref_location_city_default"
+        android:key="@string/pref_city_zip_key"
+        android:title="@string/pref_location_city_zip"
+        android:defaultValue="@string/pref_location_city_zip_default"
+        android:summary="@string/pref_location_city_zip_default"
         android:inputType="text"
         android:singleLine="true"/>
     <ListPreference

@@ -5,7 +5,7 @@
         <item>Fahrenheit</item>
     </string-array>
     <string-array name="pref_measure_unit_values">
-        <item>metric</item>
-        <item>imperial</item>
+        <item>Celsius</item>
+        <item>Fahrenheit</item>
     </string-array>
 </resources>

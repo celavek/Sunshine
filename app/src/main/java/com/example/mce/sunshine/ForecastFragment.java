@@ -3,9 +3,11 @@ package com.example.mce.sunshine;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -25,17 +27,26 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
      * A placeholder fragment containing a simple view.
      */
     public class ForecastFragment extends Fragment {
 
+        private final String prefFileName = "com.example.mce.sunshine_preferences";
         private ArrayAdapter<String> mForecastAdapter;
 
+        private Map<String, String> unitsMapping = new HashMap<String, String>();
+
+        public static String KEY_PREF_CITY_ZIP = "";
+        public static String KEY_PREF_UNIT = "";
+
         public ForecastFragment() {
+            unitsMapping.put("Celsius", "metric");
+            unitsMapping.put("Fahrenheit", "imperial");
         }
 
         @Override
@@ -43,27 +54,16 @@ import java.util.Arrays;
         {
             super.onCreate(savedInstances);
             setHasOptionsMenu(true);
+            KEY_PREF_CITY_ZIP = getActivity().getString(R.string.pref_city_zip_key);
+            KEY_PREF_UNIT = getActivity().getString(R.string.pref_unit_key);
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            ArrayList<String> forecasts = new ArrayList<String>(12);
-            forecasts.add("Today - Sunny - 88/63");
-            forecasts.add("Tomorrow - Sunny - 89/64");
-            forecasts.add("Thursday - Sunny - 90/65");
-            forecasts.add("Friday - Sunny - 87/62");
-            forecasts.add("Saturday - Sunny - 86/61");
-            forecasts.add("Sunday - Sunny - 85/60");
-            forecasts.add("Monday - Sunny - 88/63");
-            forecasts.add("Tuesday - Sunny - 88/63");
-            forecasts.add("Wednesday - Sunny - 88/63");
-            forecasts.add("Thursday - Sunny - 88/63");
-            forecasts.add("Friday - Sunny - 88/63");
-            forecasts.add("Saturday - Sunny - 88/63");
 
-            mForecastAdapter = new ArrayAdapter<String>(getActivity(), R.layout.list_item_forecast, R.id.list_item_forecast_textview, forecasts);
+            mForecastAdapter = new ArrayAdapter<String>(getActivity(), R.layout.list_item_forecast, R.id.list_item_forecast_textview);
 
             ListView forecastList = (ListView) rootView.findViewById(R.id.forecast_listview);
             forecastList.setAdapter(mForecastAdapter);
@@ -90,11 +90,24 @@ import java.util.Arrays;
     {
         switch (item.getItemId()) {
             case R.id.action_refresh:
-                new FetchWeatherTask(1050, "BE", "metric", 7).execute();
+                updateWeatherData();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onStart () {
+        super.onStart();
+        updateWeatherData();
+    }
+
+    public void updateWeatherData () {
+        //SharedPreferences prefs = getActivity().getSharedPreferences(prefFileName, Context.MODE_PRIVATE);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+
+        new FetchWeatherTask(Integer.parseInt(prefs.getString(KEY_PREF_CITY_ZIP, "")), "BE", unitsMapping.get(prefs.getString(KEY_PREF_UNIT, "")), 7).execute();
     }
 
     class FetchWeatherTask extends AsyncTask<Void, Void, String[]> {
