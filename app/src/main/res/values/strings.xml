@@ -13,4 +13,6 @@
     <string name="title_activity_settings">Preferences</string>
     <string name="pref_city_zip_key" translatable="false">sunshine_zip</string>
     <string name="pref_unit_key" translatable="false">sunshine_unit</string>
+    <string name="action_view_on_map">Location Map</string>
+    <string name="action_share">Share</string>
 </resources>

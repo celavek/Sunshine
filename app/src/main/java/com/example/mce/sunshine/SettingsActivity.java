@@ -31,16 +31,19 @@ public class SettingsActivity extends Activity {
     public Intent getParentActivityIntent() {
 
         Intent parentIntent = getIntent();
-        String className = parentIntent.getStringExtra(Intent.EXTRA_INTENT);
+        if (null != parentIntent && parentIntent.hasExtra(Intent.EXTRA_INTENT)) {
+            String className = parentIntent.getStringExtra(Intent.EXTRA_INTENT);
+            try {
 
-        try {
+                return new Intent(this, Class.forName(className));
 
-            return new Intent(this, Class.forName(className));
-
-        } catch (ClassNotFoundException cnf) {
-            cnf.printStackTrace();
-            Log.d(LOG_TAG, "No parent class found: " + className);
-            return super.getParentActivityIntent();
+            } catch (ClassNotFoundException cnf) {
+                cnf.printStackTrace();
+                Log.d(LOG_TAG, "No parent class found: " + className);
+                return super.getParentActivityIntent();
+            }
         }
+
+        return super.getParentActivityIntent();
     }
 }
