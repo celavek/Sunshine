@@ -31,8 +31,39 @@ public class MainActivity extends Activity {
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         KEY_PREF_CITY_ZIP = getString(R.string.pref_city_zip_key);
         KEY_PREF_UNIT = getString(R.string.pref_unit_key);
+
+        Log.d(LOG_TAG, "ON_CREATE");
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d(LOG_TAG, "ON_START");
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.d(LOG_TAG, "ON_RESTART");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(LOG_TAG, "ON_PAUSE");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d(LOG_TAG, "ON_STOP");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(LOG_TAG, "ON_DESTROY");
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
