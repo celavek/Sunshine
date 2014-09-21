@@ -26,7 +26,11 @@
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings">
-            </activity>
+        </activity>
+        <provider
+            android:authorities="com.example.mce.sunshine"
+            android:name="db.WeatherProvider"
+        />
     </application>
 
     <uses-permission android:name="android.permission.INTERNET" />
