@@ -29,7 +29,9 @@
         </activity>
         <provider
             android:authorities="com.example.mce.sunshine"
-            android:name="db.WeatherProvider"
+            android:name=".db.WeatherProvider"
+            android:exported="false"
+            android:multiprocess="true"
         />
     </application>
 
