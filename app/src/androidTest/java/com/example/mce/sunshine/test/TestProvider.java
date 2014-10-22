@@ -25,27 +25,27 @@ import com.example.mce.sunshine.db.WeatherContract.LocationEntry;
 import com.example.mce.sunshine.db.WeatherContract.WeatherEntry;
 import com.example.mce.sunshine.db.WeatherDbHelper;
 
+import java.util.Map;
+import java.util.Set;
+
 public class TestProvider extends AndroidTestCase {
  
     public static final String LOG_TAG = TestProvider.class.getSimpleName();
- 
+
+    static final String TEST_LOCATION = "99705";
+    static final String TEST_DATE = "20141910";
+
     public void testDeleteDb() throws Throwable {
         mContext.deleteDatabase(WeatherDbHelper.DATABASE_NAME);
     }
 
-    public void testInsertReadDb() {
+    public void testInsertReadProvider() {
 
         // If there's an error in those massive SQL table creation Strings,
         // errors will be thrown here when you try to get a writable database.
         WeatherDbHelper dbHelper = new WeatherDbHelper(mContext);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-        // Create a new map of values, where column names are the keys
-        ContentValues values = new ContentValues();
-        values.put(LocationEntry.COLUMN_LOCATION_SETTING, "99705");
-        values.put(LocationEntry.COLUMN_CITY_NAME, "North Pole");
-        values.put(LocationEntry.COLUMN_COORD_LAT, 64.7488);
-        values.put(LocationEntry.COLUMN_COORD_LONG, -147.353);
+        ContentValues values = createNorthPoleLocationValues();
 
         long locationRowId = -1;
         locationRowId = db.insert(LocationEntry.TABLE_NAME, null, values);
@@ -53,62 +53,28 @@ public class TestProvider extends AndroidTestCase {
         assertTrue(locationRowId != -1);
         Log.d(LOG_TAG, "New location row id: " + locationRowId);
 
-        // Specify which columns you want.
-        String[] columns = {};
-        values.keySet().toArray(columns);
         // A cursor is your primary interface to the query results.
-        Cursor cursor = db.query(
-                LocationEntry.TABLE_NAME,  // Table to Query
-                columns,
-                null, // Columns for the "where" clause
-                null, // Values for the "where" clause
-                null, // columns to group by
-                null, // columns to filter by row groups
+        Cursor cursor = mContext.getContentResolver().query(
+                LocationEntry.CONTENT_URI, // Table to Query
+                null, // leaving "columns" null just returns all the columns.
+                null, // cols for "where" clause
+                null, // values for "where" clause
+                null // columns to group by
+        );
+
+        validateCursor(cursor, values);
+        // Now see if we can successfully query if we include the row id
+        cursor = mContext.getContentResolver().query(
+                LocationEntry.buildLocationUri(locationRowId),
+                null, // leaving "columns" null just returns all the columns.
+                null, // cols for "where" clause
+                null, // values for "where" clause
                 null // sort order
         );
 
-        // If possible, move to the first row of the query results.
-        if (cursor.moveToFirst()) {
-            // Get the value in each column by finding the appropriate column index.
-            int locationIndex = cursor.getColumnIndex(LocationEntry.COLUMN_LOCATION_SETTING);
-            String location = cursor.getString(locationIndex);
+        validateCursor(cursor, values);
 
-            int nameIndex = cursor.getColumnIndex((LocationEntry.COLUMN_CITY_NAME));
-            String name = cursor.getString(nameIndex);
-
-            int latIndex = cursor.getColumnIndex((LocationEntry.COLUMN_COORD_LAT));
-            double latitude = cursor.getDouble(latIndex);
-
-            int longIndex = cursor.getColumnIndex((LocationEntry.COLUMN_COORD_LONG));
-            double longitude = cursor.getDouble(longIndex);
-
-            // Hooray, data was returned!  Assert that it's the right data, and that the database
-            // creation code is working as intended.
-            // Then take a break.  We both know that wasn't easy.
-            assertEquals(values.get(LocationEntry.COLUMN_CITY_NAME), name);
-            assertEquals(values.get(LocationEntry.COLUMN_LOCATION_SETTING), location);
-            assertEquals(values.get(LocationEntry.COLUMN_COORD_LAT), latitude);
-            assertEquals(values.get(LocationEntry.COLUMN_COORD_LONG), longitude);
-
-        } else {
-            // That's weird, it works on MY machine...
-            fail("No values returned :(");
-        }
-        cursor.close();
-
-        // Fantastic. Now that we have a location, add some weather!
-        ContentValues weatherValues = new ContentValues();
-        weatherValues.put(WeatherEntry.COLUMN_LOC_KEY, locationRowId);
-        weatherValues.put(WeatherEntry.COLUMN_DATETEXT, "20141205");
-        weatherValues.put(WeatherEntry.COLUMN_DEGREES, 1.1);
-        weatherValues.put(WeatherEntry.COLUMN_HUMIDITY, 1.2);
-        weatherValues.put(WeatherEntry.COLUMN_PRESSURE, 1.3);
-        weatherValues.put(WeatherEntry.COLUMN_MAX_TEMP, 75.0);
-        weatherValues.put(WeatherEntry.COLUMN_MIN_TEMP, 65.0);
-        weatherValues.put(WeatherEntry.COLUMN_SHORT_DESC, "Asteroids");
-        weatherValues.put(WeatherEntry.COLUMN_WIND_SPEED, 5.5);
-        weatherValues.put(WeatherEntry.COLUMN_WEATHER_ID, 321);
-
+        ContentValues weatherValues = createWeatherValues(locationRowId);
         long weatherRowId = -1;
         weatherRowId = db.insert(WeatherEntry.TABLE_NAME, null, weatherValues);
         // Verify we got a row back.
@@ -116,70 +82,100 @@ public class TestProvider extends AndroidTestCase {
         Log.d(LOG_TAG, "New weather row id: " + weatherRowId);
 
         // A cursor is your primary interface to the query results.
-        String[] weatherColumns = {};
-        weatherValues.keySet().toArray(weatherColumns);
-        cursor = db.query(
-                WeatherEntry.TABLE_NAME,  // Table to Query
-                weatherColumns,
-                null, // Columns for the "where" clause
-                null, // Values for the "where" clause
-                null, // columns to group by
-                null, // columns to filter by row groups
+        cursor = mContext.getContentResolver().query(
+                WeatherEntry.CONTENT_URI, // Table to Query
+                null, // leaving "columns" null just returns all the columns.
+                null, // cols for "where" clause
+                null, // values for "where" clause
+                null // columns to group by
+        );
+
+        validateCursor(cursor, weatherValues);
+
+        // Add the location values in with the weather data so that we can make
+        // sure that the join worked and we actually get all the values back
+        addAllContentValues(weatherValues, values);
+
+        // Get the joined Weather and Location data
+        cursor = mContext.getContentResolver().query(
+                WeatherEntry.buildWeatherLocation(TEST_LOCATION),
+                null, // leaving "columns" null just returns all the columns.
+                null, // cols for "where" clause
+                null, // values for "where" clause
+                null // sort order
+        );
+        validateCursor(cursor, weatherValues);
+
+        // Get the joined Weather and Location data with a start date
+        cursor = mContext.getContentResolver().query(
+                WeatherEntry.buildWeatherLocationWithStartDate(
+                        TEST_LOCATION, TEST_DATE),
+                null, // leaving "columns" null just returns all the columns.
+                null, // cols for "where" clause
+                null, // values for "where" clause
                 null // sort order
         );
 
-        // If possible, move to the first row of the query results.
-        if (cursor.moveToFirst()) {
-            // Get the value in each column by finding the appropriate column index.
-            int index = cursor.getColumnIndex(WeatherEntry.COLUMN_DATETEXT);
-            String date = cursor.getString(index);
+        validateCursor(cursor, weatherValues);
 
-            index = cursor.getColumnIndex(WeatherEntry.COLUMN_SHORT_DESC);
-            String descr = cursor.getString(index);
+        // Get the joined Weather and Location data with a start date
+        cursor = mContext.getContentResolver().query(
+                WeatherEntry.buildWeatherLocationWithDate(
+                        TEST_LOCATION, TEST_DATE),
+                null, // leaving "columns" null just returns all the columns.
+                null, // cols for "where" clause
+                null, // values for "where" clause
+                null // sort order
+        );
 
-            index = cursor.getColumnIndex(WeatherEntry.COLUMN_WEATHER_ID);
-            int wId = cursor.getInt(index);
-
-            index = cursor.getColumnIndex(WeatherEntry.COLUMN_MIN_TEMP);
-            double minTemp = cursor.getDouble(index);
-
-            index = cursor.getColumnIndex(WeatherEntry.COLUMN_MAX_TEMP);
-            double maxTemp = cursor.getDouble(index);
-
-            index = cursor.getColumnIndex(WeatherEntry.COLUMN_PRESSURE);
-            double pressure = cursor.getDouble(index);
-
-            index = cursor.getColumnIndex(WeatherEntry.COLUMN_HUMIDITY);
-            double humidity = cursor.getDouble(index);
-
-            index = cursor.getColumnIndex(WeatherEntry.COLUMN_WIND_SPEED);
-            double wind = cursor.getDouble(index);
-
-            index = cursor.getColumnIndex(WeatherEntry.COLUMN_DEGREES);
-            double deg = cursor.getDouble(index);
-
-            // Hooray, data was returned!  Assert that it's the right data, and that the database
-            // creation code is working as intended.
-            // Then take a break.  We both know that wasn't easy.
-            assertEquals(weatherValues.get(WeatherEntry.COLUMN_DATETEXT), date);
-            assertEquals(weatherValues.get(WeatherEntry.COLUMN_SHORT_DESC), descr);
-            assertEquals(weatherValues.get(WeatherEntry.COLUMN_MIN_TEMP), minTemp);
-            assertEquals(weatherValues.get(WeatherEntry.COLUMN_MAX_TEMP), maxTemp);
-            assertEquals(weatherValues.get(WeatherEntry.COLUMN_WEATHER_ID), wId);
-            assertEquals(weatherValues.get(WeatherEntry.COLUMN_PRESSURE), pressure);
-            assertEquals(weatherValues.get(WeatherEntry.COLUMN_HUMIDITY), humidity);
-            assertEquals(weatherValues.get(WeatherEntry.COLUMN_WIND_SPEED), wind);
-            assertEquals(weatherValues.get(WeatherEntry.COLUMN_DEGREES), deg);
-
-            // Fantastic.  Now that we have a location, add some weather!
-        } else {
-            // That's weird, it works on MY machine...
-            fail("No values returned :(");
-        }
-        cursor.close();
-
+        validateCursor(cursor, weatherValues);
         // close the DB handle
         dbHelper.close();
+    }
+
+    private static ContentValues createWeatherValues(long locationRowId) {
+        // Fantastic. Now that we have a location, add some weather!
+        ContentValues weatherValues = new ContentValues();
+        weatherValues.put(WeatherEntry.COLUMN_LOC_KEY, locationRowId);
+        weatherValues.put(WeatherEntry.COLUMN_DATETEXT, TEST_DATE);
+        weatherValues.put(WeatherEntry.COLUMN_DEGREES, 1.1);
+        weatherValues.put(WeatherEntry.COLUMN_HUMIDITY, 1.2);
+        weatherValues.put(WeatherEntry.COLUMN_PRESSURE, 1.3);
+        weatherValues.put(WeatherEntry.COLUMN_MAX_TEMP, 75.1);
+        weatherValues.put(WeatherEntry.COLUMN_MIN_TEMP, 65.1);
+        weatherValues.put(WeatherEntry.COLUMN_SHORT_DESC, "Asteroids");
+        weatherValues.put(WeatherEntry.COLUMN_WIND_SPEED, 5.5);
+        weatherValues.put(WeatherEntry.COLUMN_WEATHER_ID, 321);
+        return weatherValues;
+    }
+
+    private static ContentValues createNorthPoleLocationValues() {
+        // Create a new map of values, where column names are the keys
+        ContentValues values = new ContentValues();
+        values.put(LocationEntry.COLUMN_LOCATION_SETTING, TEST_LOCATION);
+        values.put(LocationEntry.COLUMN_CITY_NAME, "North Pole");
+        values.put(LocationEntry.COLUMN_COORD_LAT, 64.7488);
+        values.put(LocationEntry.COLUMN_COORD_LONG, -147.353);
+        return values;
+    }
+
+    private static void validateCursor(Cursor valueCursor, ContentValues expectedValues) {
+        assertTrue(valueCursor.moveToFirst());
+        Set<Map.Entry<String, Object>> valueSet = expectedValues.valueSet();
+        for (Map.Entry<String, Object> entry : valueSet) {
+            String columnName = entry.getKey();
+            int idx = valueCursor.getColumnIndex(columnName);
+            assertFalse(idx == -1);
+            String expectedValue = entry.getValue().toString();
+            assertEquals(expectedValue, valueCursor.getString(idx));
+        }
+        valueCursor.close();
+    }
+
+    void addAllContentValues(ContentValues destination, ContentValues source) {
+        for (String key : source.keySet()) {
+            destination.put(key, source.getAsString(key));
+        }
     }
 
     public void testGetType() {
